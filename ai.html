@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sasuke Custom OS - Forensic Image Analyzer</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons for gaming style -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter & Orbitron for game UI feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030206;
+        }
+        .orbitron-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+        /* Custom scrollbar for game UI aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 27, 75, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ef4444;
+            border-radius: 3px;
+        }
+        /* Electric Chidori Aura */
+        @keyframes chidori-pulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.1), 0 0 30px rgba(139, 92, 246, 0.05); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.25), 0 0 50px rgba(168, 85, 247, 0.15); }
+        }
+        .chidori-glow {
+            animation: chidori-pulse 3s infinite;
+        }
+        /* Scanning overlay effect */
+        @keyframes scan-line {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .scanner-line::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(180deg, transparent, #ef4444, transparent);
+            top: 0;
+            left: 0;
+            animation: scan-line 2.5s linear infinite;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-100 overflow-x-hidden">
+
+    <!-- LOCKED HIGH-DEFINITION SASUKE BACKGROUND (STAYS FIXED AND UNTOUCHED) -->
+    <div class="fixed inset-0 z-0 pointer-events-none select-none overflow-hidden bg-cover bg-center bg-no-repeat bg-fixed" 
+         style="background-image: linear-gradient(to bottom, rgba(3, 2, 6, 0.55), rgba(8, 6, 18, 0.75)), url('https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1920&auto=format&fit=crop');">
+        
+        <!-- Highly visible Sasuke Rinne-Sharingan vector overlay behind transparent panels -->
+        <div class="absolute inset-0 flex items-center justify-center opacity-50 md:opacity-75 p-6">
+            <svg class="w-[85vw] h-[85vw] max-w-[780px] text-red-600 animate-spin" style="animation-duration: 110s;" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="0.2" fill="none" opacity="0.25" />
+                <circle cx="50" cy="50" r="30" stroke="currentColor" stroke-width="0.2" fill="none" opacity="0.35" />
+                <circle cx="50" cy="50" r="15" stroke="currentColor" stroke-width="0.2" fill="none" opacity="0.45" />
+                <!-- Sharingan Tomoe symbols -->
+                <path d="M 50 20 C 47 20 45 23 45 25 C 45 28 50 30 50 30 C 50 30 55 28 55 25 C 55 23 53 20 50 20 Z" fill="currentColor" />
+                <path d="M 24 65 C 22 62 25 59 27 59 C 30 59 33 63 33 63 C 33 63 30 67 27 67 C 25 67 24 65 24 65 Z" fill="currentColor" transform="rotate(120 50 50)" />
+                <path d="M 76 65 C 78 62 75 59 73 59 C 70 59 67 63 67 63 C 67 63 70 67 73 67 C 75 67 78 65 76 65 Z" fill="currentColor" transform="rotate(240 50 50)" />
+            </svg>
+        </div>
+        <!-- Ambient Chidori Lightning Bolt Sparks Layer -->
+        <canvas id="chidori-canvas" class="absolute inset-0 w-full h-full opacity-60"></canvas>
+    </div>
+
+    <!-- MAIN INTERACTIVE SYSTEM CONTAINER -->
+    <div class="relative z-10 flex flex-col min-h-screen bg-slate-950/10">
+        
+        <!-- HEADER STATUS BAR -->
+        <header class="border-b border-white/5 bg-slate-950/20 backdrop-blur-md px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="relative w-10 h-10 rounded-full border border-red-600 flex items-center justify-center bg-slate-900/40 overflow-hidden">
+                    <span class="text-red-500 font-bold orbitron-font text-sm animate-pulse">S</span>
+                </div>
+                <div>
+                    <h1 class="orbitron-font text-lg font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-purple-400 to-blue-400">
+                        SASUKE SYSTEM OS <span class="text-xs bg-red-600/80 text-white px-2 py-0.5 rounded ml-2">V6.0</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-300 tracking-wider">STATUS SISTEM: <span class="text-emerald-400 animate-pulse">● SENSOR CHIDORI FORENSIK AKTIF</span></p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6 text-xs orbitron-font text-slate-200">
+                <div class="hidden md:block">
+                    <span class="text-slate-400">ANTARMUKA:</span> KACA ULTRA-TRANSPARAN
+                </div>
+                <div>
+                    <span class="text-slate-400">SPESIFIKASI KAMERA:</span> 24mm f/1.78
+                </div>
+            </div>
+        </header>
+
+        <!-- CORE CONTENT SECTION (GRID LAYOUT WITH MAXIMUM TRANSPARENCY) -->
+        <main class="flex-grow p-4 lg:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto w-full items-center">
+            
+            <!-- LEFT PANEL: UPLOAD IMAGE & STYLE SELECTOR (Super Transparent Glassmorphism) -->
+            <section class="bg-slate-950/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-5 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-red-500/30 min-h-[550px] justify-between">
+                <div class="absolute top-0 left-0 w-2 h-8 bg-red-600"></div>
+                <div class="absolute top-0 left-0 h-2 w-8 bg-red-600"></div>
+                
+                <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                    <h2 class="orbitron-font font-bold text-red-500 flex items-center gap-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> 01. UNGGAH FOTO
+                    </h2>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase text-right">INPUT TARGET</span>
+                </div>
+
+                <!-- Interactive Drag & Drop Box -->
+                <div id="dropzone" class="border-2 border-dashed border-white/10 hover:border-red-500/30 transition-colors rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer relative bg-slate-950/5 group overflow-hidden flex-grow min-h-[220px]">
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    
+                    <!-- File Upload UI Default -->
+                    <div id="upload-prompt" class="flex flex-col items-center gap-3">
+                        <div class="w-14 h-14 rounded-full bg-slate-950/40 border border-white/10 flex items-center justify-center text-red-500 group-hover:scale-110 group-hover:border-red-600 transition-all shadow-lg">
+                            <i class="fa-solid fa-image text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-200 text-xs sm:text-sm">Letakkan Foto Taktikal Anda Di Sini</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Mendukung JPEG, PNG, WEBP</p>
+                        </div>
+                        <span class="text-[10px] bg-slate-900/60 text-red-400 px-3.5 py-1 rounded-full border border-red-500/20 orbitron-font mt-1 hover:bg-red-950/60 transition-all">PILIH FILE</span>
+                    </div>
+
+                    <!-- Scan Loading State -->
+                    <div id="scan-loader" class="hidden flex-col items-center justify-center gap-3 py-6">
+                        <div class="relative w-16 h-16 flex items-center justify-center">
+                            <div class="absolute inset-0 border-4 border-t-red-600 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                            <i class="fa-solid fa-fingerprint text-red-500 text-2xl animate-pulse"></i>
+                        </div>
+                        <p class="orbitron-font text-[10px] tracking-widest text-red-500 animate-pulse">MEMINDAI WARNA & STRUKTUR FOTO...</p>
+                    </div>
+
+                    <!-- File Uploaded / Scanning Preview Frame -->
+                    <div id="preview-container" class="hidden absolute inset-0 w-full h-full bg-slate-950/90 flex items-center justify-center overflow-hidden scanner-line">
+                        <img id="image-preview" src="#" alt="Tactical Upload Preview" class="w-full h-full object-contain">
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-transparent"></div>
+                        
+                        <!-- Tactical HUD Overlay -->
+                        <div class="absolute bottom-3 left-3 right-3 flex justify-between items-center text-[10px] font-mono text-emerald-400 bg-slate-950/90 p-2 rounded border border-emerald-500/20">
+                            <span>SISTEM: AKTIF</span>
+                            <span class="animate-pulse">● GAMBAR TERKUNCI</span>
+                            <button id="reset-image-btn" class="text-red-400 hover:text-red-300 bg-red-950/80 px-2.5 py-1 rounded border border-red-500/20 transition-all pointer-events-auto">HAPUS</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REPLICATION STYLE TRANSFORMER SELECTOR -->
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] font-mono text-slate-400 uppercase tracking-widest">PILIH GAYA REPLIKASI / TRANSFORMASI:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button id="btn-style-real" class="style-tab border-red-500 bg-red-950/50 text-red-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all" onclick="changeStyle('real')">
+                            <i class="fa-solid fa-camera text-base"></i>
+                            <span class="text-[9px]">HYPER-REAL</span>
+                        </button>
+                        <button id="btn-style-lego" class="style-tab border-white/10 hover:border-yellow-500/30 text-slate-300 hover:text-yellow-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all" onclick="changeStyle('lego')">
+                            <i class="fa-solid fa-cubes text-base"></i>
+                            <span class="text-[9px]">LEGO TOY</span>
+                        </button>
+                        <button id="btn-style-anime" class="style-tab border-white/10 hover:border-purple-500/30 text-slate-300 hover:text-purple-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all" onclick="changeStyle('anime')">
+                            <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+                            <span class="text-[9px]">ANIME ART</span>
+                        </button>
+                        <button id="btn-style-chibi" class="style-tab border-white/10 hover:border-pink-500/30 text-slate-300 hover:text-pink-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all" onclick="changeStyle('chibi')">
+                            <i class="fa-solid fa-child text-base"></i>
+                            <span class="text-[9px]">CHIBI DOLL</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Run Forensic Action Button -->
+                <button id="btn-cast-jutsu" class="w-full bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-500 hover:to-purple-500 text-white orbitron-font py-3 px-5 rounded-xl font-bold tracking-widest flex items-center justify-center gap-2.5 transition-all duration-300 transform active:scale-95 shadow-lg shadow-red-500/10 group relative overflow-hidden text-xs">
+                    <span class="absolute inset-0 w-1/2 h-full bg-white/10 skew-x-12 -translate-x-full group-hover:translate-x-[250%] transition-transform duration-1000"></span>
+                    <i class="fa-solid fa-bolt animate-bounce text-yellow-300"></i>
+                    <span>MULAI ANALISIS REPLIKASI</span>
+                </button>
+            </section>
+
+            <!-- RIGHT PANEL: FORENSIC TEXT OUTPUT (Super Transparent Glassmorphism - No Ninjas inside JSON!) -->
+            <section class="bg-slate-950/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm flex flex-col gap-5 shadow-2xl relative overflow-hidden transition-all duration-300 hover:border-purple-500/30 min-h-[550px] justify-between chidori-glow">
+                <div class="absolute top-0 right-0 w-2 h-8 bg-purple-600"></div>
+                <div class="absolute top-0 right-0 h-2 w-8 bg-purple-600"></div>
+
+                <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                    <h2 class="orbitron-font font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 flex items-center gap-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-square-poll-horizontal animate-pulse"></i> 02. HASIL ANALISIS REPLIKASI (JSON)
+                    </h2>
+                    <span class="text-[10px] text-slate-400 font-mono tracking-widest uppercase text-right">OUTPUT REPLICATOR</span>
+                </div>
+
+                <!-- Terminal-Like JSON Container -->
+                <div class="relative w-full rounded-xl border border-white/10 bg-slate-950/45 flex flex-col overflow-hidden flex-grow min-h-[350px]">
+                    <!-- Copy Button inside terminal header -->
+                    <div class="flex justify-between items-center bg-slate-950/60 border-b border-white/10 px-4 py-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                            <span id="terminal-filename" class="text-[10px] text-slate-400 font-mono ml-2">hyper_real_prompt.json</span>
+                        </div>
+                        <button id="btn-copy-json" class="text-[11px] text-purple-400 hover:text-purple-300 flex items-center gap-1.5 transition-all bg-purple-950/60 border border-purple-500/20 px-2.5 py-1 rounded">
+                            <i class="fa-regular fa-copy"></i> SALIN JSON
+                        </button>
+                    </div>
+
+                    <!-- JSON Code View Area -->
+                    <div class="p-4 flex-grow font-mono text-xs overflow-y-auto text-emerald-400/95 leading-relaxed max-h-[340px]">
+                        <pre id="json-display" class="whitespace-pre-wrap">{
+  "status": "Silakan unggah foto di panel kiri untuk memulai penganalisisan..."
+}</pre>
+                    </div>
+                </div>
+
+                <!-- Sub-badge status info -->
+                <div id="status-badge" class="bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-slate-300 flex items-center gap-2.5">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                    <span>Analisis mendeteksi f/1.78 ultra-sharp dan mereplika skenario tanpa bokeh.</span>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast Notifier -->
+        <div class="fixed bottom-6 right-6 z-50">
+            <div id="toast-message" class="hidden text-xs bg-emerald-950/95 border border-emerald-500/30 text-emerald-400 p-3.5 rounded-xl shadow-2xl flex items-center gap-2.5 transition-all duration-300 transform translate-y-0">
+                <i class="fa-solid fa-circle-check text-base"></i> <span id="toast-text">Pesan berhasil ditampilkan.</span>
+            </div>
+        </div>
+
+        <!-- FOOTER & BRANDING -->
+        <footer class="border-t border-white/5 bg-slate-950/40 py-4 px-6 text-center text-xs text-slate-400">
+            <p>© 2026 Sasuke Custom Game OS. Visualisasi Replikasi Multi-Style Tanpa Distorsi.</p>
+        </footer>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadPrompt = document.getElementById('upload-prompt');
+        const scanLoader = document.getElementById('scan-loader');
+        const previewContainer = document.getElementById('preview-container');
+        const imagePreview = document.getElementById('image-preview');
+        const resetImageBtn = document.getElementById('reset-image-btn');
+        
+        const btnCastJutsu = document.getElementById('btn-cast-jutsu');
+        const jsonDisplay = document.getElementById('json-display');
+        const btnCopyJson = document.getElementById('btn-copy-json');
+        const terminalFilename = document.getElementById('terminal-filename');
+        const statusBadge = document.getElementById('status-badge');
+
+        let isFileUploaded = false;
+        let selectedStyle = 'real'; // Styles: 'real', 'lego', 'anime', 'chibi'
+        
+        // Dynamically parsed photo attributes in Indonesian
+        let extractedMetrics = {
+            dominantColor: "warna netral",
+            lighting: "pencahayaan siang hari yang seimbang",
+            composition: "keselarasan potret bidikan medium terpusat",
+            contrastMode: "rentang dinamis realistis yang seimbang",
+            clothingColor: "pakaian bertekstur kasual",
+            environment: "latar belakang arsitektur jalanan kota yang sangat mendetail"
+        };
+
+        // Toast Notifier Helper
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+            toastText.textContent = message;
+            toast.className = `fixed bottom-6 right-6 z-50 text-xs p-3.5 rounded-xl flex items-center gap-2.5 transition-all shadow-2xl ${isSuccess ? 'bg-emerald-950/95 border border-emerald-500/30 text-emerald-400' : 'bg-red-950/95 border border-red-500/30 text-red-400'}`;
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function changeStyle(style) {
+            selectedStyle = style;
+            
+            // Remove active style from all style buttons
+            document.querySelectorAll('.style-tab').forEach(btn => {
+                btn.className = "style-tab border-white/10 text-slate-300 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all";
+            });
+
+            // Apply active class to selected button and update Indonesian descriptions
+            const activeBtn = document.getElementById(`btn-style-${style}`);
+            if (style === 'real') {
+                activeBtn.className = "style-tab border-red-500 bg-red-950/50 text-red-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all";
+                terminalFilename.textContent = "hyper_real_prompt.json";
+                statusBadge.innerHTML = `<i class="fa-solid fa-camera text-red-400"></i><span>Mode: Hyper-Real. Mereplika kondisi f/1.78 terfokus tajam tanpa bokeh.</span>`;
+            } else if (style === 'lego') {
+                activeBtn.className = "style-tab border-yellow-500 bg-yellow-950/40 text-yellow-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all";
+                terminalFilename.textContent = "lego_bricks_prompt.json";
+                statusBadge.innerHTML = `<i class="fa-solid fa-cubes text-yellow-400"></i><span>Mode: Lego Toy. Mengubah anatomi biologis menjadi balok mainan plastik Lego.</span>`;
+            } else if (style === 'anime') {
+                activeBtn.className = "style-tab border-purple-500 bg-purple-950/40 text-purple-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all";
+                terminalFilename.textContent = "anime_art_prompt.json";
+                statusBadge.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i><span>Mode: Anime Art. Mereproduksi gambar menjadi visual cel-shaded modern yang indah.</span>`;
+            } else if (style === 'chibi') {
+                activeBtn.className = "style-tab border-pink-500 bg-pink-950/40 text-pink-400 py-2.5 px-2 rounded-xl text-xs font-mono font-bold tracking-wider flex flex-col items-center justify-center gap-1.5 border transition-all";
+                terminalFilename.textContent = "chibi_doll_prompt.json";
+                statusBadge.innerHTML = `<i class="fa-solid fa-child text-pink-400"></i><span>Mode: Chibi Doll. Mentransformasi proporsi tubuh menjadi figur kerdil 3D yang lucu.</span>`;
+            }
+
+            showToast(`Gaya replikasi diganti ke: ${style.toUpperCase()}`);
+            
+            // If image is already analyzed, instantly regenerate
+            if (isFileUploaded) {
+                generateOutputJSON();
+            }
+        }
+
+        dropzone.addEventListener('click', (e) => {
+            if (e.target !== resetImageBtn) {
+                fileInput.click();
+            }
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-red-500', 'bg-red-950/10');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('border-red-500', 'bg-red-950/10');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-red-500', 'bg-red-950/10');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                processFile(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        });
+
+        function processFile(file) {
+            uploadPrompt.classList.add('hidden');
+            scanLoader.classList.remove('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Running a localized analytical reading of pixels using dynamic memory canvas
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 64;
+                    canvas.height = 64;
+                    ctx.drawImage(img, 0, 0, 64, 64);
+                    
+                    try {
+                        const imgData = ctx.getImageData(0, 0, 64, 64).data;
+                        let r = 0, g = 0, b = 0, brightness = 0;
+                        
+                        // Sample various pixels across canvas
+                        for (let i = 0; i < imgData.length; i += 4) {
+                            r += imgData[i];
+                            g += imgData[i+1];
+                            b += imgData[i+2];
+                            brightness += (imgData[i] * 0.299 + imgData[i+1] * 0.587 + imgData[i+2] * 0.114);
+                        }
+                        
+                        const pixelsCount = imgData.length / 4;
+                        const avgR = Math.round(r / pixelsCount);
+                        const avgG = Math.round(g / pixelsCount);
+                        const avgB = Math.round(b / pixelsCount);
+                        const avgBrightness = Math.round(brightness / pixelsCount);
+
+                        // Classify lighting in Indonesian
+                        if (avgBrightness > 160) {
+                            extractedMetrics.lighting = "pencahayaan sinar matahari langsung yang terang di atas kepala, iluminasi alami siang hari";
+                            extractedMetrics.contrastMode = "eksposur terang realistis dengan kontras tinggi";
+                        } else if (avgBrightness < 90) {
+                            extractedMetrics.lighting = "pencahayaan buatan ambient rendah yang redup, bayangan realistis yang dramatis";
+                            extractedMetrics.contrastMode = "kontras lembut, bayangan volumetrik halus";
+                        } else {
+                            extractedMetrics.lighting = "daylight lembut yang seimbang, pencahayaan ruangan sekitar yang realistis";
+                            extractedMetrics.contrastMode = "kontras alami yang merata, rentang dinamis yang nyata";
+                        }
+
+                        // Determine primary dominant color theme in Indonesian for clothing & environment
+                        const maxVal = Math.max(avgR, avgG, avgB);
+                        let dominantColorName = "warna netral bersahaja";
+                        if (maxVal === avgR && avgR > 130) dominantColorName = "warna cokelat kemerahan hangat dan nada terakota";
+                        else if (maxVal === avgG && avgG > 120) dominantColorName = "warna hijau sage lembut dan nuansa hutan organik";
+                        else if (maxVal === avgB && avgB > 130) dominantColorName = "warna biru sejuk dan nuansa abu-abu baja";
+                        else if (avgR > 200 && avgG > 200 && avgB > 200) dominantColorName = "putih minimalis bersih dan sorotan krem lembut";
+                        else if (avgR < 60 && avgG < 60 && avgB < 60) dominantColorName = "warna arang gelap pekat dan nuansa hitam pekat matte";
+
+                        extractedMetrics.dominantColor = dominantColorName;
+                        extractedMetrics.clothingColor = `kain bertekstur dengan nuansa ${dominantColorName} dengan pola tenunan halus dan lipatan mikro yang autentik`;
+                        
+                        // Compose realistic environment based on analyzed palette in Indonesian
+                        if (avgBrightness > 150) {
+                            extractedMetrics.environment = `pengaturan arsitektur luar ruangan modern yang realistis, jalur beton, sorotan langit cerah, lingkungan alam seimbang yang mencerminkan tema ${dominantColorName}`;
+                        } else {
+                            extractedMetrics.environment = `ruang minimalis kontemporer dalam ruangan yang realistis, dinding beton bertekstur lembut, interior ruangan sekitar yang bersih dengan bayangan realistis yang cocok dengan tema ${dominantColorName}`;
+                        }
+
+                        // Identify composition based on image dimensions in Indonesian
+                        if (img.width > img.height) {
+                            extractedMetrics.composition = "bidikan medium terpusat, komposisi lanskap alami, keselarasan bahu yang simetris";
+                        } else {
+                            extractedMetrics.composition = "bingkai potret jarak dekat vertikal terpusat, postur berdiri tegak dari bahu ke atas yang alami";
+                        }
+
+                    } catch (err) {
+                        // Resilient Fallback standard settings in Indonesian
+                        extractedMetrics.lighting = "daylight lembut yang seimbang, bayangan realistis yang nyata";
+                        extractedMetrics.dominantColor = "nada warna netral organik";
+                        extractedMetrics.clothingColor = "pakaian kasual modern, serat tekstil premium yang realistis dengan lipatan autentik";
+                        extractedMetrics.environment = "latar belakang arsitektur jalanan kota yang sangat mendetail dengan tekstur permukaan autentik";
+                        extractedMetrics.composition = "potret medium standar terpusat, postur tubuh manusia anatomi yang seimbang";
+                    }
+
+                    setTimeout(() => {
+                        imagePreview.src = e.target.result;
+                        scanLoader.classList.add('hidden');
+                        previewContainer.classList.remove('hidden');
+                        isFileUploaded = true;
+                        
+                        showToast("Foto berhasil dimuat. Siap dianalisis secara forensik!");
+                        generateOutputJSON();
+                    }, 1200);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        resetImageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.value = '';
+            imagePreview.src = '#';
+            previewContainer.classList.add('hidden');
+            uploadPrompt.classList.remove('hidden');
+            isFileUploaded = false;
+            
+            // Reset JSON display in Indonesian
+            jsonDisplay.textContent = JSON.stringify({ "status": "Silakan unggah foto di panel kiri untuk memulai penganalisisan..." }, null, 2);
+            showToast("Antarmuka analisis dibersihkan.");
+        });
+
+        function generateOutputJSON() {
+            let generatedPrompt = {};
+
+            if (selectedStyle === 'real') {
+                // Style 1: Hyper-Realistic (Pure Indonesian Values)
+                generatedPrompt = {
+                    "instruction": "diambil dengan iPhone 15 Pro Max, lensa utama 24mm, semua dalam fokus tajam",
+                    "face_details": "fitur wajah manusia yang sangat alami dan mendetail, pori-pori kulit halus yang realistis, tekstur kulit organik, mata jernih hidup yang memantulkan cahaya, ekspresi autentik, detail wajah mikro yang tajam, resolusi 8k yang realistis",
+                    "body_pose": `${extractedMetrics.composition}, pose manusia alami yang santai dengan relaksasi otot yang realistis dan simetri anatomi alami`,
+                    "outfit": `pakaian kasual kontemporer, ${extractedMetrics.clothingColor}, tekstur kain yang sangat mendetail, lipatan pakaian alami dengan jahitan mikro organik yang tajam`,
+                    "environment": `${extractedMetrics.environment}, pencahayaan sekitar yang realistis cocok dengan ${extractedMetrics.lighting}, bayangan fisik yang nyata dengan pantulan permukaan yang akurat dan kedalaman arsitektur`,
+                    "blending": "tidak ada kedalaman ruang, tidak ada bokeh, tidak ada efek kabur akibat gerakan, semua elemen tajam",
+                    "style": "hiper-realistis, fotorealistis, tekstur kulit alami, foto iPhone 15 Pro Max, fokus tajam f/1.78",
+                    "negative_prompt": "bokeh, buram, fokus lembut, tidak nyata, seni AI, render 3d, kulit plastik"
+                };
+            } else if (selectedStyle === 'lego') {
+                // Style 2: Lego Bricks Mod (Pure Indonesian Values)
+                generatedPrompt = {
+                    "instruction": "diambil dengan iPhone 15 Pro Max, lensa utama 24mm, semua dalam fokus tajam, menggambarkan sosok figur Lego plastik buatan kustom",
+                    "face_details": "kepala minifigur Lego plastik kuning autentik, tekstur plastik mengkilap dengan cetakan mata minimalis ikonik dan senyum ramah yang dilukis",
+                    "body_pose": `${extractedMetrics.composition} diadaptasi menjadi postur figur Lego yang kaku, sendi mekanis yang kaku, tangan plastik melengkung kuning yang ikonik`,
+                    "outfit": `batang tubuh minifigur Lego plastik yang dicetak dalam warna solid ${extractedMetrics.dominantColor}, permukaan halus mengkilap, kaki balok tanpa lipatan`,
+                    "environment": `latar belakang set mainan yang sangat detail yang seluruhnya terbuat dari balok Lego asli, pelat dasar datar dengan kancing, struktur balok yang cocok dengan skema warna ${extractedMetrics.dominantColor}`,
+                    "blending": "tidak ada kedalaman ruang, tidak ada bokeh, tidak ada efek kabur akibat gerakan, semua elemen tajam, pantulan plastik mengkilap dan pencahayaan studio skala mainan yang bersih",
+                    "style": "hiper-realistis, fotorealistis, tekstur kulit alami, foto iPhone 15 Pro Max, fokus tajam f/1.78, fotografi mainan plastik yang realistis, estetika balok Lego yang autentik",
+                    "negative_prompt": "bokeh, buram, fokus lembut, tidak nyata, seni AI, render 3d, kulit plastik, kulit manusia organik asli, rambut realistis, tekstur kain, lipatan pakaian"
+                };
+            } else if (selectedStyle === 'anime') {
+                // Style 3: Anime Art Mod (Pure Indonesian Values)
+                generatedPrompt = {
+                    "instruction": "diambil dengan iPhone 15 Pro Max, lensa utama 24mm, semua dalam fokus tajam, menangkap figur cosplay karakter anime yang sangat detail dan hidup",
+                    "face_details": "wajah bergaya anime yang cantik, mata anime ekspresif yang besar dan hidup dengan pantulan multi-lapisan, rambut serasi berwarna-warni yang ditata indah, garis kulit halus tanpa cela",
+                    "body_pose": `${extractedMetrics.composition} dirender dalam seni garis anime yang elegan, postur berdiri yang estetis, sendi tangan yang anggun dan gambar anatomi anime yang sempurna`,
+                    "outfit": `pakaian mode bergaya anime yang cerah mencerminkan ${extractedMetrics.dominantColor}, lipatan estetis yang tajam, rendering cel-shaded yang halus dengan garis luar yang bersih`,
+                    "environment": `pemandangan latar belakang anime modern yang dilukis dengan indah, garis arsitektur perkotaan yang sangat detail, langit sore sinematik yang dramatis cocok dengan tema ${extractedMetrics.dominantColor}`,
+                    "blending": "tidak ada kedalaman ruang, tidak ada bokeh, tidak ada efek kabur akibat gerakan, semua elemen tajam, kejenuhan warna yang cerah, kejelasan garis garis vektor mutlak",
+                    "style": "hiper-realistis, fotorealistis, tekstur kulit alami, foto iPhone 15 Pro Max, fokus tajam f/1.78, gaya ilustrasi visual utama anime modern premium",
+                    "negative_prompt": "bokeh, buram, fokus lembut, tidak nyata, seni AI, render 3d, kulit plastik, garis sketsa kasar, gambar berkualitas rendah, pori-pori manusia yang realistis"
+                };
+            } else if (selectedStyle === 'chibi') {
+                // Style 4: Cute Chibi Mod (Pure Indonesian Values)
+                generatedPrompt = {
+                    "instruction": "diambil dengan iPhone 15 Pro Max, lensa utama 24mm, semua dalam fokus tajam, menyajikan mainan figurin vinil chibi 3D desainer",
+                    "face_details": "kepala chibi berukuran besar yang menggemaskan, mata kaca ekspresif berkilau raksasa, hidung kecil yang lucu dan mulut tersenyum kecil, hasil akhir kulit boneka porselen yang halus",
+                    "body_pose": `proporsi figurin chibi berukuran mikro yang menawan, anggota badan yang disederhanakan sangat pendek, pose berdiri seimbang yang menyenangkan`,
+                    "outfit": `pakaian boneka miniatur sederhana yang lucu, warna pastel yang cocok dengan ${extractedMetrics.dominantColor}, tekstur kain lembut dengan detail jahitan kecil minimal`,
+                    "environment": `ruangan latar belakang rumah boneka miniatur bertema pastel yang aneh, alat peraga mainan kecil, pencahayaan sekitar yang hangat dan lembut berkoordinasi dengan desain ${extractedMetrics.dominantColor}`,
+                    "blending": "tidak ada kedalaman ruang, tidak ada bokeh, tidak ada efek kabur akibat gerakan, semua elemen tajam, pencahayaan sekitar miniatur yang halus, detail mainan makro yang tajam",
+                    "style": "hiper-realistis, fotorealistis, tekstur kulit alami, foto iPhone 15 Pro Max, fokus tajam f/1.78, gaya mainan desainer pop mart, estetika figurin tanah liat chibi 3D yang lucu",
+                    "negative_prompt": "bokeh, buram, fokus lembut, tidak nyata, seni AI, render 3d, kulit plastik, wajah dewasa yang matang, proporsi tubuh manusia jangkung yang realistis, menakutkan"
+                };
+            }
+
+            // Output JSON to display
+            jsonDisplay.textContent = JSON.stringify(generatedPrompt, null, 2);
+        }
+
+        btnCastJutsu.addEventListener('click', () => {
+            if (!isFileUploaded) {
+                showToast("Harap upload foto terlebih dahulu pada panel kiri!", false);
+                return;
+            }
+
+            // Animate generating simulation in Indonesian
+            jsonDisplay.innerHTML = `<span class="animate-pulse text-purple-400">Menjalankan penganalisis piksel... [EKSTRAKSI REAL-TIME - GAYA: ${selectedStyle.toUpperCase()}]</span>`;
+            
+            setTimeout(() => {
+                generateOutputJSON();
+                showToast(`Analisis ${selectedStyle.toUpperCase()} selesai! Struktur JSON murni siap disalin.`);
+            }, 1000);
+        });
+
+        // Copy JSON logic
+        btnCopyJson.addEventListener('click', () => {
+            const textToCopy = jsonDisplay.textContent;
+            
+            // iFrame safe clipboard implementation
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("JSON berhasil disalin ke clipboard!");
+                } else {
+                    showToast("Gagal menyalin JSON.", false);
+                }
+            } catch (err) {
+                showToast("Kesalahan saat menyalin dokumen.", false);
+            }
+            
+            document.body.removeChild(tempTextArea);
+        });
+
+        const canvas = document.getElementById('chidori-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Bolt {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.length = Math.random() * 60 + 20;
+                this.life = Math.random() * 40 + 10;
+                this.maxLife = this.life;
+                this.speedX = (Math.random() - 0.5) * 5;
+                this.speedY = (Math.random() - 0.5) * 5;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life--;
+                if (this.life <= 0) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(147, 51, 234, ${(this.life / this.maxLife) * 0.25})`;
+                ctx.lineWidth = Math.random() * 1.5;
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + (Math.random() - 0.5) * 20, this.y + (Math.random() - 0.5) * 20);
+                ctx.stroke();
+            }
+        }
+
+        const bolts = Array.from({ length: 15 }, () => new Bolt());
+
+        function animateBg() {
+            ctx.clearRect(0, 0, width, height);
+            bolts.forEach(bolt => {
+                bolt.update();
+                bolt.draw();
+            });
+            requestAnimationFrame(animateBg);
+        }
+
+        window.onload = function() {
+            animateBg();
+        }
+    </script>
+</body>
+</html>
